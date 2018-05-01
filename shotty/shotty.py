@@ -31,20 +31,34 @@ def instances():
 @instances.command('list')
 @click.option('--project', default=None,
     help="Only instances for project (tag Project:<name>)")
-def list_instances(project):
+@click.option('--instance', 'inst', default=None,
+    help="specific instance")
+def list_instances(project, inst):
     "List EC2 instances"
 
     instances = filter_instances(project)
 
     for i in instances:
         tags = { t['Key']: t['Value'] for t in i.tags}
-        print(', '.join((
-            i.id,
-            i.instance_type,
-            i.placement['AvailabilityZone'],
-            i.state['Name'],
-            i.public_dns_name,
-            tags.get('Project', '<no project>'))))
+        if inst:
+            if inst == i.id:
+                print(', '.join((
+                    i.id,
+                    i.instance_type,
+                    i.placement['AvailabilityZone'],
+                    i.state['Name'],
+                    i.public_dns_name,
+                    tags.get('Project', '<no project>'))))
+            else:
+                continue
+        else:
+            print(', '.join((
+                i.id,
+                i.instance_type,
+                i.placement['AvailabilityZone'],
+                i.state['Name'],
+                i.public_dns_name,
+                tags.get('Project', '<no project>'))))
 
     return
 
@@ -157,22 +171,30 @@ def create_snapshots(project, use_force):
     instances = filter_instances(project)
     for i in instances:
         if project or use_force:
-            print("Stopping {0}...".format(i.id))
+            if i.state['Name'] == 'running':
+                print("Stopping {0}...".format(i.id))
 
-            i.stop()
-            i.wait_until_stopped()
+                i.stop()
+                i.wait_until_stopped()
 
-            for v in i.volumes.all():
-                if has_pending_snapshot(v):
-                    print("   Skipping {0}, snapshot already in progress".format(v.id))
-                    continue
-                print("   Creating snapshot of {0}".format(v.id))
-                v.create_snapshot(Description="Created by snappy")
+                for v in i.volumes.all():
+                    if has_pending_snapshot(v):
+                        print("   Skipping {0}, snapshot already in progress".format(v.id))
+                        continue
+                    print("   Creating snapshot of {0}".format(v.id))
+                    v.create_snapshot(Description="Created by snappy")
 
-            print("Starting {0}...".format(i.id))
+                print("Starting {0}...".format(i.id))
 
-            i.start()
-            i.wait_until_running()
+                i.start()
+                i.wait_until_running()
+            else:
+                for v in i.volumes.all():
+                    if has_pending_snapshot(v):
+                        print("   Skipping {0}, snapshot already in progress".format(v.id))
+                        continue
+                    print("   Creating snapshot of {0}".format(v.id))
+                    v.create_snapshot(Description="Created by snappy")
         else:
             print("You have to specify the project or use the --force flag to snapshot volumes")
             break
