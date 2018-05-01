@@ -59,7 +59,7 @@ def stop_instances(project, use_force):
     instances = filter_instances(project)
 
     for i in instances:
-        if use_force:
+        if project or use_force:
             print('Stopping {0}...'.format(i.id))
             try:
                 i.stop()
@@ -67,7 +67,7 @@ def stop_instances(project, use_force):
                 print(" Could not stop {0}.".format(i.id) + str(e))
                 continue
         else:
-            print("You have to use the --force flag to stop instances")
+            print("You have to specify the project or use the --force flag to stop instances")
             break
 
     return
@@ -83,7 +83,7 @@ def start_instances(project, use_force):
     instances = filter_instances(project)
 
     for i in instances:
-        if use_force:
+        if project or use_force:
             print('Starting {0}...'.format(i.id))
             try:
                 i.start()
@@ -91,7 +91,7 @@ def start_instances(project, use_force):
                 print(" Could not start {0}.".format(i.id) + str(e))
                 continue
         else:
-            print("You have to use the --force flag to start instances")
+            print("You have to specify the project or use the --force flag to start instances")
             break
 
     return
@@ -107,7 +107,7 @@ def reboot_instances(project, use_force):
     instances = filter_instances(project)
 
     for i in instances:
-        if use_force:
+        if project or use_force:
             print('Starting {0}...'.format(i.id))
             try:
                 i.reboot()
@@ -115,7 +115,7 @@ def reboot_instances(project, use_force):
                 print(" Could not reboot {0}.".format(i.id) + str(e))
                 continue
         else:
-            print("You have to use the --force flag to reboot instances")
+            print("You have to specify the project or use the --force flag to reboot instances")
             break
 
     return
@@ -156,7 +156,7 @@ def create_snapshots(project, use_force):
 
     instances = filter_instances(project)
     for i in instances:
-        if use_force:
+        if project or use_force:
             print("Stopping {0}...".format(i.id))
 
             i.stop()
@@ -174,7 +174,7 @@ def create_snapshots(project, use_force):
             i.start()
             i.wait_until_running()
         else:
-            print("You have to use the --force flag to snapshot volumes")
+            print("You have to specify the project or use the --force flag to snapshot volumes")
             break
 
     return
